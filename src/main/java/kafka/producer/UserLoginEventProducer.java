@@ -23,13 +23,13 @@ public class UserLoginEventProducer {
 
   private static void pushToTopic(Producer producer) {
     Random random = new Random();
-
+    int userIdsSize = userIds.size();
     while (true) {
       try {
         int countPerSec = new Random().nextInt(maxCount);
         for (int i = 0; i < countPerSec; i++) {
           Timestamp userLoginTimeStamp = new Timestamp(new Date().getTime());
-          String key = userIds.get(random.nextInt(userIds.size()));
+          String key = userIds.get(random.nextInt(userIdsSize));
           ProducerRecord<String, String> record = new ProducerRecord<>(topicName, key, userLoginTimeStamp.toString());
 
           /**
