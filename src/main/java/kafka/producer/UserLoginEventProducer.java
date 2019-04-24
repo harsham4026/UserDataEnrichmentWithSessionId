@@ -6,10 +6,7 @@ import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.*;
 
 public class UserLoginEventProducer {
 
@@ -17,7 +14,7 @@ public class UserLoginEventProducer {
   private static int waitCycle; // in seconds
   private static int maxCount;
 
-  private static void push() {
+  private static void produceAsync() {
 
     String key = "Key1";
 
@@ -29,10 +26,14 @@ public class UserLoginEventProducer {
 
     Producer<String, String> producer = new KafkaProducer<>(props);
 
+    /**
+     * Added shutdown hook for flushing the data that is yet to be pushed when the producer process is died.
+     * Shuts down the producer gracefully.
+     **/
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       try {
         producer.flush();
-        producer.close(10_000, TimeUnit.MILLISECONDS);
+        producer.close(10000, TimeUnit.MILLISECONDS);
       } catch (Exception e) {
         System.out.println("failed to close the producer");
         e.printStackTrace();
@@ -48,7 +49,13 @@ public class UserLoginEventProducer {
           Timestamp ts = new Timestamp(new Date().getTime());
           String value = lat1 + "," + long1 + "," + ts.toString();
           ProducerRecord<String, String> record = new ProducerRecord<>(topicName, key, value);
-          producer.send(record);
+
+          /**
+           *  Produce a record without waiting for server. This includes a callback that will print an error if something goes wrong.
+           Basically producing and sending records asynchronously.
+           **/
+
+          producer.send(record, new AsyncProducerCallback());
         }
 
         Thread.sleep(waitCycle);
@@ -61,6 +68,6 @@ public class UserLoginEventProducer {
   }
 
   public static void main(String[] args) {
-    push();
+    produceAsync();
   }
 }
