@@ -28,9 +28,9 @@ public class UserLoginEventProducer {
       try {
         int countPerSec = new Random().nextInt(maxCount);
         for (int i = 0; i < countPerSec; i++) {
-          Timestamp ts = new Timestamp(new Date().getTime());
+          Timestamp userLoginTimeStamp = new Timestamp(new Date().getTime());
           String key = userIds.get(random.nextInt(userIds.size()));
-          ProducerRecord<String, String> record = new ProducerRecord<>(topicName, key, ts.toString());
+          ProducerRecord<String, String> record = new ProducerRecord<>(topicName, key, userLoginTimeStamp.toString());
 
           /**
            *  Produce a record without waiting for server. This includes a callback that will print an error if something goes wrong.
